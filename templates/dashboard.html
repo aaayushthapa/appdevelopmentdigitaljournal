@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}" class="active"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('projects') }}"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="{{ url_for('logs') }}"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="{{ url_for('progress') }}"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="{{ url_for('reports') }}"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="{{ url_for('groups') }}"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>Dashboard</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-header">Recent Projects</div>
+                    <div class="card-body">
+                        {% if projects %}
+                            {% for project in projects %}
+                                <p>{{ project.name }} - Progress: {{ project.progress or '0' }}%</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No projects yet. <a href="#" id="create-project-link">Create one</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- In the dashboard-cards section, update the assignments card -->
+                <div class="card">
+                    <div class="card-header">Upcoming Assignments</div>
+                      <div class="card-body">
+                           {% if assignments %}
+                                {% for assignment in assignments %}
+                                   <p>{{ assignment.title }} - Due: {{ assignment.due_date.strftime('%Y-%m-%d') }}</p>
+                                {% endfor %}
+                          {% else %}
+                               <p>No upcoming assignments</p>
+                         {% endif %}
+                            <a href="{{ url_for('assignments') }}" class="btn">View All Assignments</a>
+                     </div>
+                 </div>
+
+                <div class="card">
+                    <div class="card-header">Teacher Feedback</div>
+                    <div class="card-body">
+                        {% if feedback %}
+                            {% for item in feedback %}
+                                <p>"{{ item.content }}" - {{ item.created_at.strftime('%Y-%m-%d') }}</p>
+                            {% endfor %}
+                        {% else %}
+                            <p>No feedback yet</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tabs">
+                <div class="tab active" data-tab="projects">Projects</div>
+                <div class="tab" data-tab="assignments">Assignments</div>
+                <div class="tab" data-tab="logs">Log Entries</div>
+                <div class="tab" data-tab="progress">Progress Timeline</div>
+            </div>
+
+            <div class="tab-content active" id="projects-tab">
+                <div class="card">
+                    <div class="card-header">Create/Join Project Group</div>
+                    <div class="card-body">
+                        <form id="project-form" method="POST" action="{{ url_for('create_project') }}">
+                            <div class="form-group">
+                                <label for="project-name">Project Name</label>
+                                <input type="text" id="project-name" name="name" class="form-control" placeholder="Enter project name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="project-description">Description</label>
+                                <textarea id="project-description" name="description" class="form-control" placeholder="Describe your project" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="project-members">Add Members (by email)</label>
+                                <input type="text" id="project-members" name="members" class="form-control" placeholder="Enter member emails separated by commas">
+                            </div>
+                            <button type="submit" class="btn">Create Project</button>
+                        </form>
+                        <hr>
+                        <h3>Available Projects to Join</h3>
+                        <ul id="available-projects">
+                            <li>Science Research Group - 3 members <button class="btn">Join</button></li>
+                            <li>History Presentation Team - 2 members <button class="btn">Join</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="assignments-tab">
+                <div class="card">
+                    <div class="card-header">Current Assignments</div>
+                    <div class="card-body">
+                        {% if assignments %}
+                            {% for assignment in assignments %}
+                                <div class="assignment">
+                                    <h3>{{ assignment.title }}</h3>
+                                    <p>Due: {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                                    <p>{{ assignment.description }}</p>
+                                    <a href="{{ url_for('assignment_detail', assignment_id=assignment.id) }}" class="btn">View Assignment</a>
+                                </div>
+                                <hr>
+                            {% endfor %}
+                        {% else %}
+                            <p>No current assignments</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="logs-tab">
+                <div class="card">
+                    <div class="card-header">Create New Log Entry</div>
+                    <div class="card-body">
+                        <form id="log-form" method="POST" action="" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="project-select">Select Project</label>
+                                <select id="project-select" name="project_id" class="form-control" required>
+                                    <option value="">Select a project</option>
+                                    {% for project in projects %}
+                                        <option value="{{ project.id }}">{{ project.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="log-title">Title</label>
+                                <input type="text" id="log-title" name="title" class="form-control" placeholder="Log entry title" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="log-content">Content</label>
+                                <textarea id="log-content" name="content" class="form-control" placeholder="What did you work on today?" required></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Add Media</label>
+                                <div class="file-upload">
+                                    <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                                    <p>Click to upload images or documents</p>
+                                    <input type="file" id="media" name="media" style="display: none;">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn">Save Log Entry</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="progress-tab">
+                <div class="card">
+                    <div class="card-header">Project Progress Timeline</div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="timeline-date">October 5, 2023</div>
+                                <div class="timeline-content">
+                                    <h4>Project Started</h4>
+                                    <p>Initial research and planning phase</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="timeline-date">October 12, 2023</div>
+                                <div class="timeline-content">
+                                    <h4>First Milestone Reached</h4>
+                                    <p>Completed literature review and hypothesis formulation</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-icon">
+                                    <i class="fas fa-spinner"></i>
+                                </div>
+                                <div class="timeline-date">October 19, 2023</div>
+                                <div class="timeline-content">
+                                    <h4>Experiment Phase</h4>
+                                    <p>Currently conducting experiments and gathering data</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        document.getElementById('project-select').addEventListener('change', function() {
+            var projectId = this.value;
+            var form = document.getElementById('log-form');
+            if (projectId) {
+                form.action = '/project/' + projectId + '/add_log';
+            } else {
+                form.action = '';
+            }
+        });
+    </script>
+</body>
+</html>

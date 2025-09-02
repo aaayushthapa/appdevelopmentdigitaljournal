@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Progress Bar Styles */
+        .progress-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            margin: 15px 0;
+            overflow: hidden;
+            height: 25px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #4cc9f0, #2ecc71);
+            border-radius: 10px;
+            text-align: center;
+            line-height: 25px;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            transition: width 0.5s ease-in-out;
+            width: 0%; /* Start at 0, will be set by JavaScript */
+        }
+        
+        .progress-percentage {
+            float: right;
+            font-weight: bold;
+            color: #4361ee;
+            background-color: #e8f5e9;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .progress-details {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #4361ee;
+        }
+        
+        .progress-details p {
+            margin: 8px 0;
+            color: #555;
+        }
+        
+        .progress-details strong {
+            color: #212529;
+            min-width: 120px;
+            display: inline-block;
+        }
+        
+        .project-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .project-card h3 {
+            margin-top: 0;
+            color: #4361ee;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        /* Alert styles */
+        .alert {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        /* Button styles */
+        .btn {
+            display: inline-block;
+            font-weight: 500;
+            text-align: center;
+            vertical-align: middle;
+            cursor: pointer;
+            background-color: #4361ee;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn:hover {
+            background-color: #3a0ca3;
+            transform: translateY(-2px);
+        }
+        
+        /* Dashboard styles */
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background: #212529;
+            color: white;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            background: #3a0ca3;
+            text-align: center;
+        }
+        
+        .sidebar-menu {
+            padding: 20px 0;
+        }
+        
+        .sidebar-menu ul {
+            list-style: none;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-menu a {
+            display: block;
+            color: white;
+            padding: 12px 20px;
+            text-decoration: none;
+            transition: all 0.3s;
+            font-size: 16px;
+        }
+        
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: #4361ee;
+            padding-left: 25px;
+        }
+        
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+        }
+        
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 15px;
+            border: 2px solid #4361ee;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: transform 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            padding: 15px 20px;
+            background: #4361ee;
+            color: white;
+            font-weight: 500;
+        }
+        
+        .card-body {
+            padding: 20px;
+        }
+        
+        .progress-data {
+            display: none; /* Hide the data element */
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('projects') }}"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="{{ url_for('logs') }}"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="{{ url_for('progress') }}" class="active"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="{{ url_for('reports') }}"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="{{ url_for('groups') }}"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>My Progress</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if projects %}
+                {% for project in projects %}
+                <div class="project-card" data-project-id="{{ project.id }}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h3>{{ project.name }}</h3>
+                        <span class="progress-percentage" id="progress-text-{{ project.id }}">{{ project.progress }}% Complete</span>
+                    </div>
+                    
+                    <!-- Store progress value in data attribute instead of inline style -->
+                    <div class="progress-data" id="progress-data-{{ project.id }}">{{ project.progress }}</div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-bar" id="progress-bar-{{ project.id }}">
+                            {% if project.progress >= 15 %}{{ project.progress }}%{% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if project.progress < 15 %}
+                    <div style="text-align: center; margin-top: 5px; font-size: 12px; color: #666;">
+                        {{ project.progress }}% Complete
+                    </div>
+                    {% endif %}
+                    
+                    <div class="progress-details">
+                        <p><strong>Description:</strong> {{ project.description }}</p>
+                        <p><strong>Log Entries:</strong> {{ project.log_count }}</p>
+                        <p><strong>First Log:</strong> 
+                            {% if project.first_log %}
+                                {{ project.first_log.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                No logs yet
+                            {% endif %}
+                        </p>
+                        <p><strong>Last Log:</strong> 
+                            {% if project.last_log %}
+                                {{ project.last_log.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                No logs yet
+                            {% endif %}
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 15px;">
+                        <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn">
+                            <i class="fas fa-eye"></i> View Project Details
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-chart-line" style="font-size: 48px; color: #ccc; margin-bottom: 20px;"></i>
+                        <h3>No Projects Yet</h3>
+                        <p>You don't have any projects to track progress yet.</p>
+                        <a href="{{ url_for('projects') }}" class="btn" style="margin-top: 15px;">
+                            <i class="fas fa-plus"></i> Create Your First Project
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Set progress bar widths using JavaScript instead of inline styles
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all project cards
+            const projectCards = document.querySelectorAll('.project-card');
+            
+            projectCards.forEach(card => {
+                const projectId = card.getAttribute('data-project-id');
+                const progressData = document.getElementById('progress-data-' + projectId);
+                
+                if (progressData) {
+                    const progressValue = parseInt(progressData.textContent);
+                    
+                    // Set the progress bar width
+                    const progressBar = document.getElementById('progress-bar-' + projectId);
+                    if (progressBar && !isNaN(progressValue)) {
+                        // Animate the progress bar
+                        progressBar.style.width = '0';
+                        
+                        setTimeout(() => {
+                            progressBar.style.width = progressValue + '%';
+                            
+                            // Update text inside bar if progress is high enough
+                            if (progressValue >= 15) {
+                                progressBar.textContent = progressValue + '%';
+                            }
+                        }, 100);
+                    }
+                    
+                    // Update progress text
+                    const progressText = document.getElementById('progress-text-' + projectId);
+                    if (progressText) {
+                        progressText.textContent = progressValue + '% Complete';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ project.name }} - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('projects') }}"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="{{ url_for('logs') }}"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="{{ url_for('progress') }}"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="{{ url_for('reports') }}"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="{{ url_for('groups') }}"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>{{ project.name }}</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="dashboard-cards">
+                <div class="card">
+                    <div class="card-header">Project Details</div>
+                    <div class="card-body">
+                        <p><strong>Description:</strong> {{ project.description }}</p>
+                        <p><strong>Created by:</strong> 
+                            {% for member in members %}
+                                {% if member.role == 'admin' %}
+                                    {{ member.name }}
+                                {% endif %}
+                            {% endfor %}
+                        </p>
+                        <p><strong>Created at:</strong> {{ project.created_at.strftime('%Y-%m-%d') }}</p>
+                        <a href="{{ url_for('generate_report', project_id=project.id) }}" class="btn">Generate Report</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Project Members</div>
+                    <div class="card-body">
+                        <ul>
+                            {% for member in members %}
+                                <li>{{ member.name }} ({{ member.role }})</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Add New Log Entry</div>
+                <div class="card-body">
+                    <form id="log-form" method="POST" action="{{ url_for('add_log') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="project_id" value="{{ project.id }}">
+                        
+                        <div class="form-group">
+                            <label for="log-title">Title</label>
+                            <input type="text" id="log-title" name="title" class="form-control" placeholder="Log entry title" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="log-content">Content</label>
+                            <textarea id="log-content" name="content" class="form-control" placeholder="What did you work on today?" required rows="5"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="media">Add Media (Optional)</label>
+                            <div class="file-upload-container">
+                                <div class="file-upload" id="log-file-upload-area">
+                                    <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                                    <p>Click to upload images or documents</p>
+                                    <p class="file-types">Supported formats: PNG, JPG, JPEG, GIF, PDF, DOC, DOCX</p>
+                                </div>
+                                <input type="file" id="media" name="media" style="display: none;" accept=".png,.jpg,.jpeg,.gif,.pdf,.doc,.docx">
+                                <div id="log-file-name-display" class="file-name-display" style="display: none;">
+                                    <span id="log-selected-file-name"></span>
+                                    <button type="button" id="log-remove-file-btn" class="remove-file-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn">Save Log Entry</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Project Logs</div>
+                <div class="card-body">
+                    {% if logs %}
+                        {% for log in logs %}
+                            <div class="log-entry">
+                                <div class="log-header">
+                                    <h3>{{ log.title }}</h3>
+                                    <span class="log-date">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                                </div>
+                                <p class="log-author">By: {{ log.user_name }}</p>
+                                <div class="log-content">
+                                    <p>{{ log.content }}</p>
+                                </div>
+                                {% if log.media_path %}
+                                    <div class="log-media">
+                                        <p><strong>Attached file:</strong></p>
+                                        {% if log.media_path.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
+                                            <img src="{{ url_for('static', filename=log.media_path) }}" alt="Log media" class="log-image">
+                                        {% else %}
+                                            <a href="{{ url_for('static', filename=log.media_path) }}" target="_blank" class="file-download">
+                                                <i class="fas fa-download"></i> Download attached file
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            {% if not loop.last %}
+                                <hr class="log-divider">
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="no-logs">
+                            <p>No logs yet for this project.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/project.js') }}"></script>
+</body>
+</html>

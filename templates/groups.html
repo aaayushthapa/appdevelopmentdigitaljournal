@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groups - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('projects') }}"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="{{ url_for('logs') }}"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="{{ url_for('progress') }}"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="{{ url_for('reports') }}"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="{{ url_for('groups') }}" class="active"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>Project Groups</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">My Groups</div>
+                <div class="card-body">
+                    {% if user_groups %}
+                        {% for group in user_groups %}
+                            <div class="group-item">
+                                <h3>{{ group.name }}</h3>
+                                <p><strong>Role:</strong> {{ group.role|capitalize }}</p>
+                                <p><strong>Members:</strong> {{ group.member_count }}</p>
+                                <a href="{{ url_for('project_detail', project_id=group.id) }}" class="btn">View Group</a>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>You are not a member of any groups yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

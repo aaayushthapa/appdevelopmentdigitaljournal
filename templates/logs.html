@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Uploads - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('projects') }}"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="{{ url_for('logs') }}" class="active"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="{{ url_for('progress') }}"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="{{ url_for('reports') }}"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="{{ url_for('groups') }}"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>Log Uploads</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Create New Log Entry</div>
+                <div class="card-body">
+                    <form id="log-form" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="project-select">Select Project</label>
+                            <select id="project-select" name="project_id" class="form-control" required>
+                                <option value="">Select a project</option>
+                                {% for project in projects %}
+                                    <option value="{{ project.id }}">{{ project.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="log-title">Title</label>
+                            <input type="text" id="log-title" name="title" class="form-control" placeholder="Log entry title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="log-content">Content</label>
+                            <textarea id="log-content" name="content" class="form-control" placeholder="What did you work on today?" required rows="5"></textarea>
+                        </div>
+                        <button type="submit" class="btn">Save Log Entry</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Recent Log Entries</div>
+                <div class="card-body">
+                    {% if recent_logs %}
+                        {% for log in recent_logs %}
+                            <div class="log-entry">
+                                <h3>{{ log.title }}</h3>
+                                <p class="log-meta">Project: {{ log.project_name }} | Date: {{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                <p>{{ log.content }}</p>
+                            </div>
+                            <hr>
+                        {% endfor %}
+                    {% else %}
+                        <p>No log entries yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.getElementById('project-select').addEventListener('change', function() {
+            var projectId = this.value;
+            var form = document.getElementById('log-form');
+            if (projectId) {
+                form.action = "/project/" + projectId + "/add_log";
+            } else {
+                form.action = "";
+            }
+        });
+    </script>
+</body>
+</html>

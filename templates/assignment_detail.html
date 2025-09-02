@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ assignment.title }} - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="#"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="#"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="#"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>{{ assignment.title }}</h1>
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card">
+                <div class="card-header">Assignment Details</div>
+                <div class="card-body">
+                    <p><strong>Course:</strong> {{ assignment.course_name }}</p>
+                    <p><strong>Due Date:</strong> {{ assignment.due_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                    <p><strong>Description:</strong> {{ assignment.description }}</p>
+                    <p><strong>Max Points:</strong> {{ assignment.max_points }}</p>
+                </div>
+            </div>
+
+            {% if session.user_role == 'student' %}
+            <div class="card">
+                <div class="card-header">Your Submission</div>
+                <div class="card-body">
+                    {% if submission %}
+                        <div class="submission-status submitted">
+                            <h4>Submission Status: Submitted</h4>
+                            <p><strong>Submitted on:</strong> {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            
+                            {% if submission.file_path %}
+                                <p><strong>Submitted file:</strong> 
+                                    <a href="{{ url_for('static', filename=submission.file_path) }}" target="_blank" class="file-download">
+                                        <i class="fas fa-download"></i> Download File
+                                    </a>
+                                </p>
+                            {% else %}
+                                <p><strong>Submitted file:</strong> No file uploaded</p>
+                            {% endif %}
+                            
+                            {% if submission.comments %}
+                                <p><strong>Your comments:</strong> {{ submission.comments }}</p>
+                            {% endif %}
+                            
+                            {% if submission.grade is not none %}
+                                <p class="grade"><strong>Grade:</strong> {{ submission.grade }}/{{ assignment.max_points }}</p>
+                            {% endif %}
+                            
+                            {% if submission.feedback %}
+                                <p><strong>Teacher feedback:</strong> {{ submission.feedback }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <hr>
+                        <h4>Update Your Submission</h4>
+                        <p>You can update your submission by uploading a new file or adding comments.</p>
+                    {% else %}
+                        <div class="submission-status not-submitted">
+                            <h4>Submission Status: Not Submitted</h4>
+                            <p>You haven't submitted this assignment yet.</p>
+                        </div>
+                    {% endif %}
+
+                    <form id="submit-form" method="POST" action="{{ url_for('submit_assignment') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                        
+                        <div class="form-group">
+                            <label for="submission-file">Upload File (Optional)</label>
+                            <div class="file-upload-container">
+                                <div class="file-upload" id="file-upload-area">
+                                    <i class="fas fa-cloud-upload-alt fa-2x"></i>
+                                    <p>Click to upload your submission or drag and drop a file here</p>
+                                    <p class="file-types">Supported formats: PDF, DOC, DOCX, images</p>
+                                </div>
+                                <input type="file" id="submission-file" name="submission_file" style="display: none;" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                <div id="file-name-display" class="file-name-display" style="display: none;">
+                                    <span id="selected-file-name"></span>
+                                    <button type="button" id="remove-file-btn" class="remove-file-btn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="comments">Comments (Optional)</label>
+                            <textarea id="comments" name="comments" class="form-control" placeholder="Add any comments about your submission">{{ submission.comments if submission else '' }}</textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn">
+                            {% if submission %}Update Submission{% else %}Submit Assignment{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/assignments.js') }}"></script>
+</body>
+</html>

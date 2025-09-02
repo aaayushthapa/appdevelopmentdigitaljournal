@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Submissions - Digital Class Journal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Digital Journal</h2>
+            </div>
+            <div class="sidebar-menu">
+                <ul>
+                    <li><a href="{{ url_for('dashboard') }}"><i class="fas fa-home"></i> Dashboard</a></li>
+                    <li><a href="#"><i class="fas fa-project-diagram"></i> Projects</a></li>
+                    <li><a href="{{ url_for('assignments') }}"><i class="fas fa-tasks"></i> Assignments</a></li>
+                    <li><a href="#"><i class="fas fa-file-upload"></i> Log Uploads</a></li>
+                    <li><a href="#"><i class="fas fa-chart-line"></i> Progress</a></li>
+                    <li><a href="#"><i class="fas fa-file-pdf"></i> Reports</a></li>
+                    <li><a href="#"><i class="fas fa-users"></i> Groups</a></li>
+                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
+                    <li><a href="{{ url_for('logout') }}" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="dashboard-header">
+                <h1>Student Submissions</h1>
+                {% if assignment %}
+                <h2>{{ assignment.title }}</h2>
+                {% endif %}
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <img src="{{ session.user_avatar }}" alt="User Avatar">
+                    </div>
+                    <div>
+                        <h3>{{ session.user_name }}</h3>
+                        <p>{{ session.user_role|capitalize }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% if submissions %}
+                {% for submission in submissions %}
+                <div class="card submission-card">
+                    <div class="card-header">
+                        {{ submission.student_name }} - {{ submission.assignment_title }}
+                        <span class="submit-date">Submitted: {{ submission.submitted_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                    </div>
+                    <div class="card-body">
+                        {% if submission.file_path %}
+                            <p><strong>File:</strong> <a href="{{ url_for('static', filename=submission.file_path) }}" target="_blank">Download</a></p>
+                        {% endif %}
+                        {% if submission.comments %}
+                            <p><strong>Student Comments:</strong> {{ submission.comments }}</p>
+                        {% endif %}
+                        
+                        <form method="POST" action="{{ url_for('grade_submission') }}" class="grade-form">
+                            <input type="hidden" name="submission_id" value="{{ submission.id }}">
+                            <div class="form-group">
+                                <label for="grade-{{ submission.id }}">Grade (out of 100)</label>
+                                <input type="number" id="grade-{{ submission.id }}" name="grade" 
+                                       class="form-control" min="0" max="100" 
+                                       value="{{ submission.grade if submission.grade is not none else '' }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="feedback-{{ submission.id }}">Feedback</label>
+                                <textarea id="feedback-{{ submission.id }}" name="feedback" 
+                                          class="form-control" rows="3">{{ submission.feedback or '' }}</textarea>
+                            </div>
+                            <button type="submit" class="btn">Save Grade & Feedback</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body">
+                        <p>No submissions found.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
